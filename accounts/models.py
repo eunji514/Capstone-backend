@@ -11,6 +11,9 @@ class UserManager(BaseUserManager):
 
         email = self.normalize_email(email)
 
+        if not email.endswith('@dankook.ac.kr'):
+            raise ValueError('이메일은 반드시 단국대학교 이메일을 사용해야 합니다.')
+
         if password:
             validate_strong_password(password)
 
