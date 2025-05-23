@@ -57,3 +57,45 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+
+class BuddyProfile(models.Model):
+    INTEREST_CHOICES = [
+        ("sports", "운동"),
+        ("games", "게임"),
+        ("music", "음악"),
+        ("pets", "반려동물"),
+        ("travel", "여행"),
+        ("food", "음식"),
+        ("anime", "애니"),
+        ("study", "공부"),
+    ]
+
+    LANGUAGE_CHOICES = [
+        ("korean", "한국어"),
+        ("english", "영어"),
+        ("chinese", "중국어"),
+        ("japanese", "일본어"),
+        ("french", "프랑스어"),
+        ("spanish", "스페인어"),
+    ]
+
+    PURPOSE_CHOICES = [
+        ("friendship", "친구 사귀기"),
+        ("language", "언어 교환"),
+        ("culture", "문화 체험"),
+    ]
+
+    MATCHING_TYPE_CHOICES = [
+        ("1:1", "1:1"),
+        ("N:N", "N:N"),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='buddy_profile')
+    interest = models.CharField(max_length=200)  
+    language = models.CharField(max_length=200)
+    purpose = models.CharField(max_length=200)
+    matching_type = models.CharField(max_length=3, choices=MATCHING_TYPE_CHOICES)
+
+    def __str__(self):
+        return f"{self.user.email}의 버디 프로필"
