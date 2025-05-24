@@ -16,8 +16,9 @@ class BuddyProfileSerializer(serializers.ModelSerializer):
     interest = serializers.ListField(child=serializers.CharField())
     language = serializers.ListField(child=serializers.CharField())
     purpose = serializers.ListField(child=serializers.CharField())
+    matching_type = serializers.ChoiceField(choices=["1:1", "N:N"])
 
-    email = serializers.EmailField(write_only=True)  
+    email = serializers.EmailField(read_only=True)  
 
     class Meta:
         model = BuddyProfile

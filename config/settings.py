@@ -134,3 +134,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',  
     ]
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'xilver14@dankook.ac.kr'

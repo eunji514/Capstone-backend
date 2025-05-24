@@ -102,3 +102,13 @@ class BuddyProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.email}의 버디 프로필"
+
+
+class EmailVerification(models.Model):
+    email = models.EmailField(unique=True)
+    code = models.CharField(max_length=6)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.email} - {'인증됨' if self.is_verified else '미인증'}"
