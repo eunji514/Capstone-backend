@@ -1,10 +1,11 @@
 import random, re
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.core.mail import send_mail
 from django.core.exceptions import ValidationError
-from .serializers import SignupSerializer, BuddyProfileSerializer
+from .serializers import SignupSerializer, BuddyProfileSerializer, UserProfileSerializer
 from .models import EmailVerification
 
 class SignupUserInfoView(APIView):
@@ -100,3 +101,12 @@ class EmailVerificationConfirmView(APIView):
         record.save()
 
         return Response({"message": "이메일 인증이 완료되었습니다."}, status=200)
+
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserProfileSerializer(user)
+        return Response(serializer.data, status=200)

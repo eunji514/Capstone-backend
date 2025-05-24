@@ -49,3 +49,30 @@ class BuddyProfileSerializer(serializers.ModelSerializer):
         rep['language'] = instance.language.split(',')
         rep['purpose'] = instance.purpose.split(',')
         return rep 
+
+
+class BuddyProfileReadSerializer(serializers.ModelSerializer):
+    interest = serializers.SerializerMethodField()
+    language = serializers.SerializerMethodField()
+    purpose = serializers.SerializerMethodField()
+
+    def get_interest(self, obj):
+        return obj.interest.split(',')
+
+    def get_language(self, obj):
+        return obj.language.split(',')
+
+    def get_purpose(self, obj):
+        return obj.purpose.split(',')
+
+    class Meta:
+        model = BuddyProfile
+        fields = ['interest', 'language', 'purpose', 'matching_type']
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    buddy_profile = BuddyProfileReadSerializer()
+
+    class Meta:
+        model = User
+        fields = ['email', 'name', 'student_id', 'major', 'buddy_profile']
