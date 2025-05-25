@@ -26,5 +26,6 @@ urlpatterns = [
     path('signup/', include('accounts.signup_urls')),
     path('auth/', include('accounts.auth_urls')),
     path('api/', include('accounts.profile_urls')),
+    path('posts/', include('board.urls')),
     
 ]
