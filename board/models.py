@@ -16,3 +16,13 @@ class BoardPost(models.Model):
 
     def __str__(self):
         return f"[{self.get_post_type_display()}] {self.title}"
+
+
+class Comment(models.Model):
+    post = models.ForeignKey('BoardPost', on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.author.name}의 댓글: {self.content[:20]}"

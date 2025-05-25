@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
-from .models import BoardPost
-from .serializers import BoardPostSerializer
+from .models import BoardPost, Comment
+from .serializers import BoardPostSerializer, CommentSerializer
 
 class NoticePostListView(generics.ListAPIView):
     serializer_class = BoardPostSerializer
@@ -53,18 +53,44 @@ class NoticePostDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
 
 
-class CommunityPostDetailView(generics.RetrieveUpdateDestroyAPIView):
+class CommunityPostDetailView(generics.RetrieveDestroyAPIView):
     queryset = BoardPost.objects.filter(post_type='community')
     serializer_class = BoardPostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def perform_update(self, serializer):
-        post = self.get_object()
-        if post.author != self.request.user:
-            raise PermissionDenied("본인의 글만 수정할 수 있습니다.")
-        serializer.save()
-
     def perform_destroy(self, instance):
         if instance.author != self.request.user:
             raise PermissionDenied("본인의 글만 삭제할 수 있습니다.")
+        instance.delete()
+
+
+class CommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        post_id = self.kwargs['post_id']
+        return Comment.objects.filter(post__id=post_id)
+
+    def perform_create(self, serializer):
+        post_id = self.kwargs['post_id']
+        try:
+            post = BoardPost.objects.get(id=post_id)
+        except BoardPost.DoesNotExist:
+            raise NotFound("게시글이 존재하지 않습니다.")
+
+        if post.post_type != 'community':
+            raise PermissionDenied("공지사항에는 댓글을 작성할 수 없습니다.")
+
+        serializer.save(author=self.request.user, post=post)
+
+
+class CommentDeleteView(generics.DestroyAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_destroy(self, instance):
+        if instance.author != self.request.user:
+            raise PermissionDenied("본인의 댓글만 삭제할 수 있습니다.")
         instance.delete()

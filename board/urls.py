@@ -6,6 +6,8 @@ from .views import (
     CommunityPostCreateView,
     NoticePostDetailView,
     CommunityPostDetailView,
+    CommentListCreateView,
+    CommentDeleteView,
 )
 
 urlpatterns = [
@@ -17,5 +19,8 @@ urlpatterns = [
     
     path('notice/<int:pk>/', NoticePostDetailView.as_view(), name='noticepost-detail'),
     path('community/<int:pk>/', CommunityPostDetailView.as_view(), name='communitypost-detail'),
+
+    path('community/<int:post_id>/comments/', CommentListCreateView.as_view(), name='comment-list-create'),
+    path('community/<int:post_id>/comments/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
 ]
 
