@@ -21,6 +21,6 @@ urlpatterns = [
     path('community/<int:pk>/', CommunityPostDetailView.as_view(), name='communitypost-detail'),
 
     path('community/<int:post_id>/comments/', CommentListCreateView.as_view(), name='comment-list-create'),
-    path('community/<int:post_id>/comments/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
+    path('comments/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
 ]
 
