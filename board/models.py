@@ -11,6 +11,9 @@ class BoardPost(models.Model):
     post_type = models.CharField(max_length=10, choices=POST_TYPE_CHOICES)
     title = models.CharField(max_length=200)
     content = models.TextField()
+    event_location = models.CharField(max_length=100, blank=True, null=True)
+    event_start = models.DateTimeField(blank=True, null=True)
+    event_end = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
