@@ -56,11 +56,23 @@ class NoticePostDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         if not self.request.user.is_staff:
             raise PermissionDenied("공지사항은 관리자만 수정할 수 있습니다.")
-        serializer.save()
+        
+        updated_post = serializer.save()
+
+        if updated_post.event_start and updated_post.event_end and updated_post.event_location:
+            event, created = CalendarEvent.objects.get_or_create(post=updated_post)
+            event.title = updated_post.title
+            event.location = updated_post.event_location
+            event.start = updated_post.event_start
+            event.end = updated_post.event_end
+            event.save()
 
     def perform_destroy(self, instance):
         if not self.request.user.is_staff:
             raise PermissionDenied("공지사항은 관리자만 삭제할 수 있습니다.")
+        
+        CalendarEvent.objects.filter(post=instance).delete()
+
         instance.delete()
 
 

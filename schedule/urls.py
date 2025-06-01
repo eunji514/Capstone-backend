@@ -14,18 +14,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+
+from django.urls import path
+from .views import MonthlyCalendarView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('signup/', include('accounts.signup_urls')),
-    path('auth/', include('accounts.auth_urls')),
-    path('api/', include('accounts.profile_urls')),
-    path('posts/', include('board.urls')),
-    path('calendar/', include('schedule.urls')),
+    path('events/', MonthlyCalendarView.as_view(), name='monthly-events'),
 ]
