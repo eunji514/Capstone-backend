@@ -26,7 +26,18 @@ class NoticePostCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         if not self.request.user.is_staff:
             raise PermissionDenied("공지사항은 관리자만 작성할 수 있습니다.")
-        serializer.save(author=self.request.user, post_type='notice')
+
+        post = serializer.save(author=self.request.user, post_type='notice')
+
+         if post.event_start and post.event_end and post.event_location:
+            CalendarEvent.objects.create(
+                post=post,
+                title=post.title,
+                location=post.event_location,
+                start=post.event_start,
+                end=post.event_end
+            )
+
 
 
 class CommunityPostCreateView(generics.CreateAPIView):
