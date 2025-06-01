@@ -29,13 +29,14 @@ class NoticePostCreateView(generics.CreateAPIView):
 
         post = serializer.save(author=self.request.user, post_type='notice')
 
-         if post.event_start and post.event_end and post.event_location:
+        if post.event_start and post.event_end and post.event_location:
             CalendarEvent.objects.create(
                 post=post,
                 title=post.title,
                 location=post.event_location,
                 start=post.event_start,
-                end=post.event_end
+                end=post.event_end,
+                student_council = selected_council
             )
 
 

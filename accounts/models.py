@@ -50,6 +50,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=30)
     major = models.CharField(max_length=3, choices=MAJOR_CHOICES)
 
+    student_council = models.ForeignKey(
+        'schedule.StudentCouncil',  
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
