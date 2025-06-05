@@ -49,17 +49,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     student_id = models.CharField(max_length=8)
     name = models.CharField(max_length=30)
     major = models.CharField(max_length=3, choices=MAJOR_CHOICES)
+
     # profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
 
-    student_council = models.ForeignKey(
-        'schedule.StudentCouncil',  
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL
-    )
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    is_student_council = models.BooleanField(default=False)
 
     objects = UserManager()
 

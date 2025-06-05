@@ -24,12 +24,12 @@ class NoticePostCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        if not self.request.user.is_staff:
+        if not self.request.user.is_student_council:
             raise PermissionDenied("공지사항은 관리자만 작성할 수 있습니다.")
 
         post = serializer.save(author=self.request.user, post_type='notice')
 
-        if post.event_start and post.event_end and post.event_location:
+        if post.event_start and post.event_end: # 시간 설정하면 캘린더 표시
             CalendarEvent.objects.create(
                 post=post,
                 title=post.title,
@@ -38,7 +38,6 @@ class NoticePostCreateView(generics.CreateAPIView):
                 end=post.event_end,
                 student_council = selected_council
             )
-
 
 
 class CommunityPostCreateView(generics.CreateAPIView):
@@ -55,7 +54,7 @@ class NoticePostDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_update(self, serializer):
-        if not self.request.user.is_staff:
+        if not self.request.user.is_student_council:
             raise PermissionDenied("공지사항은 관리자만 수정할 수 있습니다.")
         
         updated_post = serializer.save()
@@ -69,7 +68,7 @@ class NoticePostDetailView(generics.RetrieveUpdateDestroyAPIView):
             event.save()
 
     def perform_destroy(self, instance):
-        if not self.request.user.is_staff:
+        if not self.request.user.is_student_council:
             raise PermissionDenied("공지사항은 관리자만 삭제할 수 있습니다.")
         
         CalendarEvent.objects.filter(post=instance).delete()

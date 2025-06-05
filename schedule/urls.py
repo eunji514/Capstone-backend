@@ -16,8 +16,9 @@ Including another URLconf
 """
 
 from django.urls import path
-from .views import MonthlyCalendarView
+from .views import MonthlyCalendarView, EventsByDateView
 
 urlpatterns = [
     path('events/', MonthlyCalendarView.as_view(), name='monthly-events'),
+    path('events/by-date/', EventsByDateView.as_view(), name='events-by-date'),
 ]
