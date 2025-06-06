@@ -12,13 +12,15 @@ class BoardPostSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'content',
+            'translated_content',
+            'original_language',
             'created_at',
             'updated_at',
             'author_name',
             'author_student_id',
             'author_major',
         ]
-        read_only_fields = ['created_at', 'updated_at', 'author_name', 'author_student_id', 'author_major']
+        read_only_fields = ['created_at', 'updated_at', 'author_name', 'author_student_id', 'author_major', 'translated_content', 'original_language']
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -27,8 +29,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'post', 'content', 'author_name', 'created_at', 'parent', 'replies']
-        read_only_fields = ['id', 'author_name', 'created_at', 'replies']
+        fields = ['id', 'post', 'content', 'author_name', 'created_at', 'parent', 'replies', 'translated_content', 'original_language']
+        read_only_fields = ['id', 'author_name', 'created_at', 'replies', 'translated_content', 'original_language']
     
     def get_replies(self, obj):
         if obj.replies.exists():

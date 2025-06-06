@@ -8,6 +8,8 @@ from .views import (
     CommunityPostDetailView,
     CommentListCreateView,
     CommentDeleteView,
+    translate_post,
+    translate_comment,
 )
 
 urlpatterns = [
@@ -22,5 +24,8 @@ urlpatterns = [
 
     path('community/<int:post_id>/comments/', CommentListCreateView.as_view(), name='comment-list-create'),
     path('comments/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
+
+    path('<int:pk>/translate/', translate_post, name='translate-post'),
+    path('comments/<int:pk>/translate/', translate_comment, name='translate-comment'),
 ]
 

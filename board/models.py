@@ -11,6 +11,8 @@ class BoardPost(models.Model):
     post_type = models.CharField(max_length=10, choices=POST_TYPE_CHOICES)
     title = models.CharField(max_length=200)
     content = models.TextField()
+    translated_content = models.TextField(blank=True, null=True)
+    original_language = models.CharField(max_length=10, blank=True, null=True)
     event_location = models.CharField(max_length=100, blank=True, null=True)
     event_start = models.DateTimeField(blank=True, null=True)
     event_end = models.DateTimeField(blank=True, null=True)
@@ -25,6 +27,8 @@ class Comment(models.Model):
     post = models.ForeignKey('BoardPost', on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
+    translated_content = models.TextField(blank=True, null=True)
+    original_language = models.CharField(max_length=10, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
