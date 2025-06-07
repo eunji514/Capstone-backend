@@ -24,4 +24,5 @@ urlpatterns = [
     path('api/', include('accounts.profile_urls')),
     path('posts/', include('board.urls')),
     path('calendar/', include('schedule.urls')),
+    path('buddy/', include('buddy.urls')),
 ]

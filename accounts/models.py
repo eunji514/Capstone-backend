@@ -56,6 +56,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_student_council = models.BooleanField(default=False)
+    is_buddy_enabled = models.BooleanField(default=True)
 
     objects = UserManager()
 
