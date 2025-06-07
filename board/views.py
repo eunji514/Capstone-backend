@@ -1,9 +1,8 @@
 from openai import OpenAI
 from rest_framework import generics, permissions
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
 from config import config
 from langdetect import detect
 from .models import BoardPost, Comment
@@ -44,7 +43,7 @@ class NoticePostCreateView(generics.CreateAPIView):
                 location=post.event_location,
                 start=post.event_start,
                 end=post.event_end,
-                student_council = selected_council
+                student_council=post.author
             )
 
 
