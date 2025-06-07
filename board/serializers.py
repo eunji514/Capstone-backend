@@ -19,6 +19,7 @@ class BoardPostSerializer(serializers.ModelSerializer):
             'author_name',
             'author_student_id',
             'author_major',
+            'board_images',
         ]
         read_only_fields = ['created_at', 'updated_at', 'author_name', 'author_student_id', 'author_major', 'translated_content', 'original_language']
 

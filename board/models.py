@@ -18,6 +18,7 @@ class BoardPost(models.Model):
     event_end = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    board_images = models.ImageField(upload_to='board_images/', blank=True, null=True)
 
     def __str__(self):
         return f"[{self.get_post_type_display()}] {self.title}"

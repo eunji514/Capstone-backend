@@ -12,10 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from . import config
-# import os
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Quick-start development settings - unsuitable for production
@@ -28,7 +31,7 @@ OPENAI_API_KEY = config.OPENAI_API_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '172.31.61.133']
 
 
 # Application definition
@@ -46,18 +49,31 @@ INSTALLED_APPS = [
     'board',
     'schedule',
     'buddy',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     # 'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:3000', 'http://localhost:3000', '3000']
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_METHODS = (
+"DELETE",
+"GET",
+"OPTIONS",
+"PATCH",
+"POST",
+"PUT",
+)
 
 ROOT_URLCONF = 'config.urls'
 

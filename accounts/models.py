@@ -49,8 +49,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     student_id = models.CharField(max_length=8)
     name = models.CharField(max_length=30)
     major = models.CharField(max_length=3, choices=MAJOR_CHOICES)
-
-    # profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
 
 
     is_active = models.BooleanField(default=True)
@@ -96,7 +95,12 @@ class BuddyProfile(models.Model):
 
     MATCHING_TYPE_CHOICES = [
         ("1:1", "1:1"),
-        ("N:N", "N:N"),
+        # ("N:N", "N:N"),
+    ]
+
+    STUDENT_TYPE_CHOICES = [
+        ('Korean', '한국 학생'),
+        ('International', '국제 학생'),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='buddy_profile')
@@ -104,6 +108,7 @@ class BuddyProfile(models.Model):
     language = models.CharField(max_length=200)
     purpose = models.CharField(max_length=200)
     matching_type = models.CharField(max_length=3, choices=MATCHING_TYPE_CHOICES)
+    student_type = models.CharField(max_length=13, choices=STUDENT_TYPE_CHOICES, default='Korean')
 
     def __str__(self):
         return f"{self.user.email}의 버디 프로필"
