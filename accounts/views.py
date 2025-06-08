@@ -6,7 +6,7 @@ from rest_framework import status
 from django.core.mail import send_mail
 from django.core.exceptions import ValidationError
 from .serializers import SignupSerializer, BuddyProfileSerializer, UserProfileSerializer
-from .models import EmailVerification
+from .models import EmailVerification, User
 
 class SignupUserInfoView(APIView):
     def post(self, request):
@@ -35,9 +35,13 @@ class SignupUserInfoView(APIView):
 
 class SignupBuddyInfoView(APIView):
     def post(self, request):
+        email = request.data.get("email")
+        if not email:
+            return Response({"error": "이메일은 필수입니다."}, status=400)
+
         serializer = BuddyProfileSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(email=email)
             return Response(
                 {"message": "버디 정보 저장 완료. 회원가입이 완료되었습니다."},
                 status=status.HTTP_201_CREATED
@@ -110,3 +114,56 @@ class UserProfileView(APIView):
         user = request.user
         serializer = UserProfileSerializer(user)
         return Response(serializer.data, status=200)
+
+
+class ProfileImageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        image = request.FILES.get('profile_image')
+        if not image:
+            return Response(
+                {'detail': 'profile_image 파일을 함께 전송하세요.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = request.user
+        # 기존 이미지 삭제
+        if user.profile_image:
+            user.profile_image.delete(save=False)
+
+        user.profile_image = image
+        user.save()
+
+        serializer = UserProfileSerializer(user, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        user = request.user
+        # 파일 스토리지에서 삭제
+        if user.profile_image:
+            user.profile_image.delete(save=False)
+        # default 값으로 되돌리기
+        user.profile_image = 'profile_images/default.png'
+        user.save()
+
+        serializer = UserProfileSerializer(user, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class BuddyProfileEditView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        buddy = request.user.buddy_profile
+        serializer = BuddyProfileSerializer(
+            buddy,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        # 변경된 전체 프로필 반환
+        user_serializer = UserProfileSerializer(request.user, context={'request': request})
+        return Response(user_serializer.data, status=status.HTTP_200_OK)

@@ -3,10 +3,12 @@ from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 from config import config
 from langdetect import detect
-from .models import BoardPost, Comment
-from .serializers import BoardPostSerializer, CommentSerializer
+from .models import BoardPost, Comment, BoardPostImage
+from .serializers import BoardPostSerializer, CommentSerializer, BoardPostImageSerializer
+from schedule.models import CalendarEvent
 
 client = OpenAI(api_key=config.OPENAI_API_KEY)
 
@@ -55,6 +57,15 @@ class CommunityPostCreateView(generics.CreateAPIView):
         serializer.save(author=self.request.user, post_type='community')
 
 
+# class PostViewSet(ModelViewSet):
+#     queryset = BoardPost.objects.all()
+#     serializer_class = BoardPostSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     # def perform_create(self, serializer):
+#     #     serializer.save(author=self.request.user)
+    
+
 class NoticePostDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BoardPost.objects.filter(post_type='notice')
     serializer_class = BoardPostSerializer
@@ -64,15 +75,24 @@ class NoticePostDetailView(generics.RetrieveUpdateDestroyAPIView):
         if not self.request.user.is_student_council:
             raise PermissionDenied("공지사항은 관리자만 수정할 수 있습니다.")
         
-        updated_post = serializer.save()
+        post = serializer.save()
 
-        if updated_post.event_start and updated_post.event_end:
-            event, created = CalendarEvent.objects.get_or_create(post=updated_post)
-            event.title = updated_post.title
-            event.location = updated_post.event_location
-            event.start = updated_post.event_start
-            event.end = updated_post.event_end
-            event.save()
+        for img in self.request.FILES.getlist('uploaded_images'):
+            BoardPostImage.objects.create(post=post, board_image=img)
+
+        if post.event_start and post.event_end:
+            CalendarEvent.objects.update_or_create(
+                post=post,
+                defaults={
+                    'title':           post.title,
+                    'location':        post.event_location,
+                    'start':           post.event_start,
+                    'end':             post.event_end,
+                    'student_council': post.author,
+                }
+            )
+        else:
+            CalendarEvent.objects.filter(post=post).delete()
 
     def perform_destroy(self, instance):
         if not self.request.user.is_student_council:
@@ -91,6 +111,20 @@ class CommunityPostDetailView(generics.RetrieveDestroyAPIView):
     def perform_destroy(self, instance):
         if instance.author != self.request.user:
             raise PermissionDenied("본인의 글만 삭제할 수 있습니다.")
+        instance.delete()
+
+
+class BoardPostImageDeleteView(generics.DestroyAPIView):
+    queryset = BoardPostImage.objects.all()
+    serializer_class = BoardPostImageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_destroy(self, instance):
+        post = instance.post
+        if post.post_type != 'notice':
+            raise PermissionDenied("커뮤니티 글의 이미지는 삭제할 수 없습니다.")
+        if not self.request.user.is_student_council:
+            raise PermissionDenied("공지사항 이미지는 관리자만 삭제할 수 있습니다.")
         instance.delete()
 
 

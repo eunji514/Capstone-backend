@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, permissions
+from rest_framework import status, permissions, generics
 from datetime import timedelta
 from django.utils import timezone
 from django.db import models
@@ -9,9 +9,10 @@ from .models import BuddyRelation
 from .serializers import BuddyRelationSerializer
 from .utils import calculate_match_score, get_buddy_status_color
 import random
+from .permissions import IsBuddyEnabled
 
 class BuddyRequestView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsBuddyEnabled]
 
     def post(self, request):
         target_id = request.data.get('buddy_id')
@@ -45,26 +46,24 @@ class BuddyRequestView(APIView):
         return Response(BuddyRelationSerializer(relation).data, status=201)
 
 
-class SentBuddyRequestsView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+class SentBuddyRequestsView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsBuddyEnabled]
+    serializer_class = BuddyRelationSerializer
 
-    def get(self, request):
-        relations = request.user.sent_requests.filter(status='requested')
-        serializer = BuddyRelationSerializer(relations, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return self.request.user.sent_requests.filter(status='requested')
 
 
-class ReceivedBuddyRequestsView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+class ReceivedBuddyRequestsView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsBuddyEnabled]
+    serializer_class = BuddyRelationSerializer
 
-    def get(self, request):
-        relations = request.user.received_requests.filter(status='requested')
-        serializer = BuddyRelationSerializer(relations, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return self.request.user.received_requests.filter(status='requested')
 
 
 class BuddyCancelRequestView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsBuddyEnabled]
 
     def delete(self, request):
         relation_id = request.data.get('relation_id')
@@ -87,7 +86,7 @@ class BuddyCancelRequestView(APIView):
 
 
 class RespondBuddyRequestView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsBuddyEnabled]
 
     def patch(self, request):
         relation_id = request.data.get('relation_id')
@@ -123,22 +122,21 @@ class RespondBuddyRequestView(APIView):
             return Response({'message': '거절 완료'}, status=200)
 
 
-class ActiveBuddyListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+class ActiveBuddyListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsBuddyEnabled]
+    serializer_class = BuddyRelationSerializer
 
-    def get(self, request):
-        relations = BuddyRelation.objects.filter(
-            models.Q(user=request.user) | models.Q(buddy=request.user),
+    def get_queryset(self):
+        two_weeks_ago = timezone.now() - timedelta(days=14)
+        return BuddyRelation.objects.filter(
+            models.Q(user=self.request.user) | models.Q(buddy=self.request.user),
             status='accepted',
-            accepted_at__gte=timezone.now() - timedelta(days=14)
+            accepted_at__gte=two_weeks_ago
         )
-
-        serializer = BuddyRelationSerializer(relations, many=True)
-        return Response(serializer.data)
 
 
 class RecommendBuddyView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsBuddyEnabled]
 
     def get(self, request):
         user = request.user
@@ -149,10 +147,10 @@ class RecommendBuddyView(APIView):
 
         # 제외할 유저 목록: 나 자신, 이미 신청/수락한 상대
         sent_ids = user.sent_requests.values_list('buddy_id', flat=True)
-        accepted_ids = BuddyRelation.objects.filter(
-            models.Q(user=user) | models.Q(buddy=user),
-            status='accepted'
-        ).values_list('user_id', 'buddy_id')
+        accepted_ids = BuddyRelation.objects.filter(...).values_list('user_id', flat=True) \
+                .union(
+                  BuddyRelation.objects.filter(...).values_list('buddy_id', flat=True)
+                )
 
         flat_accepted_ids = set()
         for u, b in accepted_ids:
@@ -160,8 +158,8 @@ class RecommendBuddyView(APIView):
 
         exclude_ids = set(sent_ids) | flat_accepted_ids | {user.id}
 
-        # 추천 대상 필터링
-        candidates = BuddyProfile.objects.exclude(user__id__in=exclude_ids)
+        # 추천 대상 필터링: 기능 on 사용자만 추천
+        candidates = BuddyProfile.objects.filter(user__is_buddy_enabled=True).exclude(user__id__in=exclude_ids)
 
         # 점수 계산
         scored = [

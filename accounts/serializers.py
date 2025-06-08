@@ -74,7 +74,31 @@ class BuddyProfileReadSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     buddy_profile = BuddyProfileReadSerializer()
+    profile_image = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        use_url=True,           
+    )
+    profile_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['email', 'name', 'student_id', 'major', 'buddy_profile', 'profile_image']
+        fields = [
+            'email', 'name', 'student_id', 'major',
+            'buddy_profile', 'profile_image', 'profile_image_url'
+        ]
+
+    def get_profile_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.profile_image:
+            return request.build_absolute_uri(obj.profile_image.url)
+        return None
+
+    # def update(self, instance, validated_data):
+    #     # 프로필 이미지를 포함한 부분 업데이트
+    #     image = validated_data.pop('profile_image', None)
+    #     if image is not None:
+    #         instance.profile_image = image
+    #     if image is None:
+    #         instance.profile_image = 'profile_images/default.png'
+    #     return super().update(instance, validated_data)

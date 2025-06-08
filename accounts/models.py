@@ -43,14 +43,19 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("KST", "Korea Studies"),
         ("AFM", "Acting & Filmmaking"),
         ("GCE", "Global Core Education"),
+        ("PID", "Primus International Department")
     ]
 
     email = models.EmailField(unique=True)
     student_id = models.CharField(max_length=8)
     name = models.CharField(max_length=30)
     major = models.CharField(max_length=3, choices=MAJOR_CHOICES)
-    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
-
+    profile_image = models.ImageField(
+        upload_to='profile_images/', 
+        null=True, 
+        blank=True,
+        default = 'profile_images/default.png',
+        )
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
