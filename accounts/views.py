@@ -7,6 +7,7 @@ from django.core.mail import send_mail
 from django.core.exceptions import ValidationError
 from .serializers import SignupSerializer, BuddyProfileSerializer, UserProfileSerializer
 from .models import EmailVerification, User
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class SignupUserInfoView(APIView):
     def post(self, request):
@@ -105,6 +106,31 @@ class EmailVerificationConfirmView(APIView):
         record.save()
 
         return Response({"message": "이메일 인증이 완료되었습니다."}, status=200)
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response(
+                {'detail': '리프레시 토큰(refresh)이 필요합니다.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(
+                {'detail': '로그아웃 처리되었습니다.'},
+                status=status.HTTP_205_RESET_CONTENT
+                )
+        except Exception:
+            return Response(
+                {'detail': '유효하지 않은 토큰입니다.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class UserProfileView(APIView):
