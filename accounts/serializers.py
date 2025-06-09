@@ -7,7 +7,7 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'student_id', 'name', 'major']
+        fields = ['email', 'password', 'student_id', 'name', 'major', 'student_type']
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
@@ -17,13 +17,12 @@ class BuddyProfileSerializer(serializers.ModelSerializer):
     language = serializers.ListField(child=serializers.CharField())
     purpose = serializers.ListField(child=serializers.CharField())
     matching_type = serializers.ChoiceField(choices=["1:1"])
-    student_type = serializers.ChoiceField(choices=["Korean", "International"])
 
     email = serializers.EmailField(read_only=True)  
 
     class Meta:
         model = BuddyProfile
-        fields = ['email', 'interest', 'language', 'purpose', 'matching_type', 'student_type']
+        fields = ['email', 'interest', 'language', 'purpose', 'matching_type']
 
     def create(self, validated_data):
         email = validated_data.pop('email')
@@ -42,7 +41,6 @@ class BuddyProfileSerializer(serializers.ModelSerializer):
             language=language,
             purpose=purpose,
             matching_type=validated_data['matching_type'],
-            student_type=validated_data['student_type']
         )
 
     def to_representation(self, instance):
@@ -69,7 +67,7 @@ class BuddyProfileReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BuddyProfile
-        fields = ['interest', 'language', 'purpose', 'matching_type', 'student_type']
+        fields = ['interest', 'language', 'purpose', 'matching_type']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -84,7 +82,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'email', 'name', 'student_id', 'major',
+            'email', 'name', 'student_id', 'major', 'student_type',
             'buddy_profile', 'profile_image', 'profile_image_url'
         ]
 

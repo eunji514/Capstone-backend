@@ -133,13 +133,13 @@ class CommentListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        post_id = self.kwargs['post_id']
-        return Comment.objects.filter(post__id=post_id, parent=None)
+        pk = self.kwargs['pk']
+        return Comment.objects.filter(post__id=pk, parent=None)
 
     def perform_create(self, serializer):
-        post_id = self.kwargs['post_id']
+        pk = self.kwargs['pk']
         try:
-            post = BoardPost.objects.get(id=post_id)
+            post = BoardPost.objects.get(id=pk)
         except BoardPost.DoesNotExist:
             raise NotFound("게시글이 존재하지 않습니다.")
 

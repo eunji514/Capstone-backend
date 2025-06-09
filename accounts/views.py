@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.core.exceptions import ValidationError
 from .serializers import SignupSerializer, BuddyProfileSerializer, UserProfileSerializer
 from .models import EmailVerification, User
@@ -54,58 +54,92 @@ class EmailVerificationRequestView(APIView):
     def generate_code(self):
         return ''.join(random.choices('0123456789', k=6))
 
-    def validate_email(self, email):
-        if not re.fullmatch(r'^[\w\.-]+@dankook\.ac\.kr$', email):
-            raise ValidationError("단국대학교 이메일만 사용 가능합니다.")
+    # def validate_email(self, email):
+    #     if not re.fullmatch(r'^[\w\.-]+@dankook\.ac\.kr$', email):
+    #         raise ValidationError("단국대학교 이메일만 사용 가능합니다.")
 
     def post(self, request):
         email = request.data.get('email')
         if not email:
             return Response({"error": "이메일을 입력하세요."}, status=400)
 
-        try:
-            self.validate_email(email)
-        except ValidationError as e:
-            return Response({"error": str(e)}, status=400)
+        # try:
+        #     self.validate_email(email)
+        # except ValidationError as e:
+        #     return Response({"error": str(e)}, status=400)
 
-        code = self.generate_code()
+        # old_code = EmailVerification.objects.filter(email=email)
+        # if old_code.exists():
+        #     old_code.delete()
+
+        verification_code = self.generate_code()
 
         EmailVerification.objects.update_or_create(
             email=email,
-            defaults={'code': code, 'is_verified': False}
+            defaults={'code': verification_code, 'is_verified': False}
         )
 
-        send_mail(
-            subject="[단국대] 이메일 인증 코드",
-            message=f"인증 코드: {code}",
-            from_email=None,
-            recipient_list=[email]
+
+        email_message = EmailMessage(
+            subject="[UniBridge] 이메일 인증 코드",
+            body=f"인증 코드: {verification_code}",  
+            to=[email]
         )
 
+        # verify_code = EmailVerification(email=email, code=verification_code)
+        # verify_code.save()
+        email_message.send()
         return Response({"message": "인증 코드가 이메일로 전송되었습니다."}, status=200)
 
 
 class EmailVerificationConfirmView(APIView):
     def post(self, request):
         email = request.data.get('email')
-        code = request.data.get('code')
+        code  = request.data.get('code')
 
-        if not email or not code:
-            return Response({"error": "이메일과 인증 코드를 모두 입력하세요."}, status=400)
+        if not email or code is None:
+            return Response(
+                {"error": "이메일과 인증 코드를 모두 입력하세요."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             record = EmailVerification.objects.get(email=email)
         except EmailVerification.DoesNotExist:
-            return Response({"error": "해당 이메일에 대한 인증 요청이 없습니다."}, status=404)
+            return Response(
+                {"error": "인증 요청 내역이 없습니다."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        if record.code != code:
-            return Response({"error": "인증 코드가 일치하지 않습니다."}, status=400)
+        if record.is_verified:
+            return Response(
+                {"message": "이미 인증이 완료된 이메일입니다."},
+                status=status.HTTP_200_OK
+            )
+
+        if not record.code:
+            return Response(
+                {"error": "인증 코드가 만료되었거나 존재하지 않습니다. 다시 요청해주세요."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        input_code    = str(code).strip()
+        expected_code = record.code.strip()
+
+        if input_code != expected_code:
+            return Response(
+                {"error": "인증 코드가 일치하지 않습니다."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         record.is_verified = True
         record.code = None
-        record.save()
+        record.save(update_fields=['is_verified', 'code'])
 
-        return Response({"message": "이메일 인증이 완료되었습니다."}, status=200)
+        return Response(
+            {"message": "이메일 인증이 완료되었습니다."},
+            status=status.HTTP_200_OK
+        )
 
 
 class LogoutView(APIView):

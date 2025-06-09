@@ -1,5 +1,3 @@
-# chat/views.py
-
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -38,11 +36,11 @@ class MessageListCreateView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
 
     def get_queryset(self):
-        room_id = self.kwargs['room_id']
+        pk = self.kwargs['pk']
         # 방에 속해있지 않으면 404
         room = get_object_or_404(
             ChatRoom.objects.prefetch_related('messages'),
-            id=room_id,
+            id=pk,
             participants=self.request.user
         )
         return room.messages.order_by('timestamp')
@@ -50,7 +48,7 @@ class MessageListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         room = get_object_or_404(
             ChatRoom,
-            id=self.kwargs['room_id'],
+            id=self.kwargs['pk'],
             participants=self.request.user
         )
         serializer.save(sender=self.request.user, room=room)

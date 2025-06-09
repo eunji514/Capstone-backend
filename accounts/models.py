@@ -5,14 +5,14 @@ from .validators import validate_strong_password
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, student_id, name, major, password=None):
+    def create_user(self, email, student_id, name, major, student_type, password=None):
         if not email:
             raise ValueError('이메일은 필수입니다.')
 
         email = self.normalize_email(email)
 
-        if not email.endswith('@dankook.ac.kr'):
-            raise ValueError('이메일은 반드시 단국대학교 이메일을 사용해야 합니다.')
+        # if not email.endswith('@dankook.ac.kr'):
+        #     raise ValueError('이메일은 반드시 단국대학교 이메일을 사용해야 합니다.')
 
         if password:
             validate_strong_password(password)
@@ -21,14 +21,15 @@ class UserManager(BaseUserManager):
             email=email,
             student_id=student_id,
             name=name,
-            major=major
+            major=major,
+            student_type=student_type
         )
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, student_id, name, major, password=None):
-        user = self.create_user(email, student_id, name, major, password)
+    def create_superuser(self, email, student_id, name, major, student_type, password=None):
+        user = self.create_user(email, student_id, name, major, student_type, password)
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
@@ -46,10 +47,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("PID", "Primus International Department")
     ]
 
+    STUDENT_TYPE_CHOICES = [
+        ('Korean', '한국 학생'),
+        ('International', '국제 학생'),
+    ]
+
     email = models.EmailField(unique=True)
-    student_id = models.CharField(max_length=8)
+    student_id = models.CharField(max_length=8, unique=True)
     name = models.CharField(max_length=30)
     major = models.CharField(max_length=3, choices=MAJOR_CHOICES)
+    student_type = models.CharField(max_length=13, choices=STUDENT_TYPE_CHOICES)
+
     profile_image = models.ImageField(
         upload_to='profile_images/', 
         null=True, 
@@ -65,7 +73,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['student_id', 'name', 'major']
+    REQUIRED_FIELDS = ['student_id', 'name', 'major', 'student_type']
 
     def __str__(self):
         return self.email
@@ -103,17 +111,11 @@ class BuddyProfile(models.Model):
         # ("N:N", "N:N"),
     ]
 
-    STUDENT_TYPE_CHOICES = [
-        ('Korean', '한국 학생'),
-        ('International', '국제 학생'),
-    ]
-
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='buddy_profile')
-    interest = models.CharField(max_length=200)  
-    language = models.CharField(max_length=200)
-    purpose = models.CharField(max_length=200)
+    interest = models.CharField(max_length=200, choices=INTEREST_CHOICES)  
+    language = models.CharField(max_length=200, choices=LANGUAGE_CHOICES)
+    purpose = models.CharField(max_length=200, choices=PURPOSE_CHOICES)
     matching_type = models.CharField(max_length=3, choices=MATCHING_TYPE_CHOICES)
-    student_type = models.CharField(max_length=13, choices=STUDENT_TYPE_CHOICES, default='Korean')
 
     def __str__(self):
         return f"{self.user.email}의 버디 프로필"

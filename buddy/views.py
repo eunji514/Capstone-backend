@@ -147,10 +147,10 @@ class RecommendBuddyView(APIView):
 
         # 제외할 유저 목록: 나 자신, 이미 신청/수락한 상대
         sent_ids = user.sent_requests.values_list('buddy_id', flat=True)
-        accepted_ids = BuddyRelation.objects.filter(...).values_list('user_id', flat=True) \
-                .union(
-                  BuddyRelation.objects.filter(...).values_list('buddy_id', flat=True)
-                )
+        accepted_ids = BuddyRelation.objects.filter(
+            models.Q(user=user) | models.Q(buddy=user),
+            status='accepted'
+        ).values_list('user_id', 'buddy_id')
 
         flat_accepted_ids = set()
         for u, b in accepted_ids:
@@ -159,12 +159,16 @@ class RecommendBuddyView(APIView):
         exclude_ids = set(sent_ids) | flat_accepted_ids | {user.id}
 
         # 추천 대상 필터링: 기능 on 사용자만 추천
-        candidates = BuddyProfile.objects.filter(user__is_buddy_enabled=True).exclude(user__id__in=exclude_ids)
+        candidates = User.objects.filter(
+            is_buddy_enabled=True,
+            student_type='International' if user.student_type == 'Korean' else 'Korean'
+        ).exclude(id__in=exclude_ids)
 
         # 점수 계산
         scored = [
-            (c, calculate_match_score(my_profile, c))
-            for c in candidates
+            (c.buddy_profile, calculate_match_score(my_profile, c.buddy_profile))
+            for c in candidates.select_related('buddy_profile')
+            if hasattr(c, 'buddy_profile')
         ]
 
         scored.sort(key=lambda x: (-x[1], random.random()))  # 점수 내림차순 + 랜덤 요소
