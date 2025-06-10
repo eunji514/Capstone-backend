@@ -19,7 +19,6 @@ class SignupUserInfoView(APIView):
         record = EmailVerification.objects.filter(email=email, is_verified=True).first()
         if not record:
             return Response({"error": "이메일 인증이 필요합니다."}, status=400)
-        
 
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
@@ -36,13 +35,13 @@ class SignupUserInfoView(APIView):
 
 class SignupBuddyInfoView(APIView):
     def post(self, request):
-        email = request.data.get("email")
-        if not email:
-            return Response({"error": "이메일은 필수입니다."}, status=400)
+        # email = request.data.get("email")
+        # if not email:
+        #     return Response({"error": "이메일은 필수입니다."}, status=400)
 
         serializer = BuddyProfileSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(email=email)
+            serializer.save()
             return Response(
                 {"message": "버디 정보 저장 완료. 회원가입이 완료되었습니다."},
                 status=status.HTTP_201_CREATED
@@ -169,10 +168,9 @@ class LogoutView(APIView):
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def get(self, request):
-        user = request.user
-        serializer = UserProfileSerializer(user)
+        serializer = UserProfileSerializer(request.user, context={'request': request})
         return Response(serializer.data, status=200)
 
 
@@ -207,7 +205,7 @@ class ProfileImageView(APIView):
         user.profile_image = 'profile_images/default.png'
         user.save()
 
-        serializer = UserProfileSerializer(user, context={'request': request})
+        serializer = UserProfileSerializer(user, context={'request': request})  
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

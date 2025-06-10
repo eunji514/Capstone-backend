@@ -112,9 +112,9 @@ class BuddyProfile(models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='buddy_profile')
-    interest = models.CharField(max_length=200, choices=INTEREST_CHOICES)  
-    language = models.CharField(max_length=200, choices=LANGUAGE_CHOICES)
-    purpose = models.CharField(max_length=200, choices=PURPOSE_CHOICES)
+    interest = models.CharField(max_length=200)  
+    language = models.CharField(max_length=200)
+    purpose = models.CharField(max_length=200)
     matching_type = models.CharField(max_length=3, choices=MATCHING_TYPE_CHOICES)
 
     def __str__(self):

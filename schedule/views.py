@@ -6,8 +6,8 @@ from datetime import datetime
 
 class MonthlyCalendarView(APIView):
     def get(self, request):
-        year = int(request.query_params.get("year"))
-        month = int(request.query_params.get("month"))
+        year = request.query_params.get("year")
+        month = request.query_params.get("month")
         events = CalendarEvent.objects.filter(
             start__year=year,
             start__month=month

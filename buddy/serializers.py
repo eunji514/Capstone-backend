@@ -31,4 +31,4 @@ class BuddyRelationSerializer(serializers.ModelSerializer):
         return end.strftime("%Y-%m-%d") if end else None
 
     def get_is_active(self, obj):
-        return obj.is_active()
+        return obj.is_active_buddy()

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User, BuddyProfile
 from .validators import validate_strong_password
+from django.conf import settings
 
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_strong_password])
@@ -16,9 +17,9 @@ class BuddyProfileSerializer(serializers.ModelSerializer):
     interest = serializers.ListField(child=serializers.CharField())
     language = serializers.ListField(child=serializers.CharField())
     purpose = serializers.ListField(child=serializers.CharField())
-    matching_type = serializers.ChoiceField(choices=["1:1"])
+    matching_type = serializers.CharField()
 
-    email = serializers.EmailField(read_only=True)  
+    email = serializers.EmailField(write_only=True)  
 
     class Meta:
         model = BuddyProfile
@@ -87,10 +88,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
         ]
 
     def get_profile_image_url(self, obj):
+        # profile_image가 없으면 None 반환
+        if not obj.profile_image:
+            return None
+            
+        # request context 확인
         request = self.context.get('request')
-        if obj.profile_image:
+        if request is not None:
             return request.build_absolute_uri(obj.profile_image.url)
-        return None
+        
+        # request가 없는 경우 URL만 반환
+        return obj.profile_image.url
 
     # def update(self, instance, validated_data):
     #     # 프로필 이미지를 포함한 부분 업데이트

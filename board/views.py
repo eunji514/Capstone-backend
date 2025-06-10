@@ -45,7 +45,7 @@ class NoticePostCreateView(generics.CreateAPIView):
                 location=post.event_location,
                 start=post.event_start,
                 end=post.event_end,
-                student_council=post.author
+                # student_council=post.author.name
             )
 
 
@@ -60,7 +60,7 @@ class CommunityPostCreateView(generics.CreateAPIView):
 # class PostViewSet(ModelViewSet):
 #     queryset = BoardPost.objects.all()
 #     serializer_class = BoardPostSerializer
-#     permission_classes = [permissions.IsAuthenticated]
+#     permission_classes = [permissions.AllowAny]
 
 #     # def perform_create(self, serializer):
 #     #     serializer.save(author=self.request.user)
@@ -88,7 +88,7 @@ class NoticePostDetailView(generics.RetrieveUpdateDestroyAPIView):
                     'location':        post.event_location,
                     'start':           post.event_start,
                     'end':             post.event_end,
-                    'student_council': post.author,
+                    # 'student_council': post.author.name,
                 }
             )
         else:
